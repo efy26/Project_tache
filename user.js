@@ -4,7 +4,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 const router = Router();
 
-// Route pour créer un utilisateur
+// Utile dans la 2 eme partie
 
 
 export default router;
