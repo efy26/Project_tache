@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+//Création des énumeration
+
+enum Priorite {
+  MOYENNE
+  ELEVEE
+  FAIBLE
+}
+
+enum Etat {
+  A_FAIRE
+  EN_COURS
+  EN_REVISION
+  TERMINE
+}
+
+enum Action {
+	AJOUTER
+	MODIFIER
+	SUPPRIMER
+}
+
+// Création de 5 tables(AFaire; Encours; Enrevision; Termine; TodoHistory)
+
+model AFaire {
+  id          Int      @id @default(autoincrement())
+  titre       String
+  description String
+  auteur      String?
+  assigne     String?
+  datecreate  DateTime @default(now())
+  dateLimite  DateTime?
+  priorite    Priorite?
+}
+
+model Encours {
+  id          Int      @id @default(autoincrement())
+  titre       String
+  description String
+  auteur      String?
+  assigne     String?
+  datecreate  DateTime?
+  dateLimite  DateTime?
+  priorite    Priorite?
+}
+
+model Enrevision {
+  id          Int      @id @default(autoincrement())
+  titre       String
+  description String
+  auteur      String?
+  assigne     String?
+  datecreate  DateTime?
+  dateLimite  DateTime?
+  priorite    Priorite?
+}
+
+model Termine {
+  id          Int      @id @default(autoincrement())
+  titre       String
+  description String
+  auteur      String?
+  assigne     String?
+  datecreate  DateTime?
+  dateLimite  DateTime?
+  priorite    Priorite?
+}
+
+
+model TodoHistory {
+  id          Int      @id @default(autoincrement())
+  titre       String
+  description String
+  auteur      String?   
+  dateLimite  DateTime?
+  priorite    Priorite?
+  datecreate  DateTime?
+  action	  Action?
+}
