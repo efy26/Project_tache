@@ -20,6 +20,23 @@ import {
 const router = Router();
 
 
+                                        //**1 Route des triages*/
+//Trier par date
+router.get("/api/todos/sorted", async (req, res) => {
+    const { table, sortBy = "datecreate", order = "asc" } = req.query;
+ 
+    try {
+        if (!table) {
+            return res.status(400).json({ error: "Le paramètre 'table' est requis." });
+        }
+ 
+        const sortedTodos = await trierTaches(table, sortBy, order);
+        res.status(200).json(sortedTodos);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+//**Test:OK */
 
 
                                         //**2 Route des fonctions de bases*/
