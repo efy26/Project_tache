@@ -10,12 +10,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//Création des énumeration
+
 
 enum Priorite {
-  MOYENNE
-  ELEVEE
-  FAIBLE
+  INFERIOR
+  MOYEN
+  HAUT
 }
 
 enum Etat {
@@ -29,15 +29,15 @@ enum Action {
 	AJOUTER
 	MODIFIER
 	SUPPRIMER
+	TRANSFERER
 }
 
-// Création de 5 tables(AFaire; Encours; Enrevision; Termine; TodoHistory)
 
 model AFaire {
   id          Int      @id @default(autoincrement())
   titre       String
   description String
-  auteur      String?
+  status      String?
   assigne     String?
   datecreate  DateTime @default(now())
   dateLimite  DateTime?
@@ -48,7 +48,7 @@ model Encours {
   id          Int      @id @default(autoincrement())
   titre       String
   description String
-  auteur      String?
+  status      String?
   assigne     String?
   datecreate  DateTime?
   dateLimite  DateTime?
@@ -59,7 +59,7 @@ model Enrevision {
   id          Int      @id @default(autoincrement())
   titre       String
   description String
-  auteur      String?
+  status      String?
   assigne     String?
   datecreate  DateTime?
   dateLimite  DateTime?
@@ -70,7 +70,7 @@ model Termine {
   id          Int      @id @default(autoincrement())
   titre       String
   description String
-  auteur      String?
+  status      String?
   assigne     String?
   datecreate  DateTime?
   dateLimite  DateTime?
