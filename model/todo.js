@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
  * @param {string} order - Ordre du tri ("asc" ou "desc")
  * @returns {Promise<Array>} - Liste des tâches triées
  */
-export const trierTaches = async (table, sortBy = "datecreate", order = "asc") => {
+export const trierTaches = async (table, sortBy = "datecreate") => {
     try {
             //Vérifie si la table est entrée correctement
         if (!["AFaire", "Encours", "Enrevision", "Termine"].includes(table)) {
@@ -26,7 +26,7 @@ export const trierTaches = async (table, sortBy = "datecreate", order = "asc") =
 
         const todos = await prisma[table].findMany({
             orderBy: {
-                [sortBy]: order
+                [sortBy]: "asc",
             },
         });
 
@@ -40,18 +40,18 @@ export const trierTaches = async (table, sortBy = "datecreate", order = "asc") =
 //Trier par priorite
 export const getTodosSortedByPriority = async (table) => {
     try {
-        const todos = await prisma[table].findMany({
-            orderBy: {
-                priorite: 'desc', // Trie par ordre décroissant (haute priorité en premier)
-            },
-        });
+        const todos = await prisma[table].findMany();
 
-        return todos;
+        const priorityOrder = { HAUTE: 1, MOYEN: 2, INFERIOR: 3 };
+
+        return todos.sort((a, b) => priorityOrder[a.priorite] - priorityOrder[b.priorite]);
     } catch (error) {
         console.error("Erreur lors de la récupération des tâches triées par priorité :", error);
         throw new Error("Impossible de récupérer les tâches triées par priorité");
     }
 };
+
+
 
 
 
@@ -62,14 +62,14 @@ export const getTodosSortedByPriority = async (table) => {
 
 //Creation d une tache. TOute taches créer est par defaut dans la table AFaire(seulement)
 export const addTodo = async (data) => {
-    const { titre, description, auteur, assigne, dateLimite, priorite } = data; // Déstructuration
+    const { titre, description, status, assigne, dateLimite, priorite } = data; // Déstructuration
 
     try {
         const todo = await prisma.AFaire.create({
             data: {
                 titre,         
                 description,       
-                auteur,        
+                status: "AFaire",        
                 assigne,       
                 dateLimite: new Date(dateLimite),
                 priorite,      // Priorité (Faible, Moyenne, Elevee)
@@ -142,7 +142,7 @@ export const transferTodo = async (fromTable, toTable, id) => {
         }
 
         // 2️⃣ Insérer la tâche dans la table cible
-        const transtodo = await prisma[toTable].create({ data: { ...todo, id: undefined } });
+        const transtodo = await prisma[toTable].create({ data: { ...todo, status: toTable, id: undefined } });
 
         // 3️⃣ Supprimer la tâche de la table source
         await prisma[fromTable].delete({ where: { id } });
@@ -235,6 +235,7 @@ export const updateTodo = async (table, id, data) => {
             where: { id },
             data: {
                 titre,
+                
                 description,
                 dateLimite: dateLimite ? new Date(dateLimite) : null, // Conversion en DateTime si fourni
                 priorite,
@@ -293,7 +294,7 @@ export const getTodosHistorique = async () => {
 
 
 
-//Juste les ignorer
+//Juste les ignorer PLS
 export const getUser = async () => {
     const todos = await prisma.User.findMany();
     return todos;
@@ -314,5 +315,34 @@ export const selectitreTodo = async (titre) => {
         },
     });
     return todo
+};
+
+export const updateAuthor = async (table, id, newStatus) => {
+    try {
+        // Vérification que la table est valide
+        if (!["AFaire", "Encours", "Enrevision", "Termine"].includes(table)) {
+            throw new Error(`Table "${table}" invalide.`);
+        }
+
+        // Vérifier si la tâche existe
+        const todoExists = await prisma[table].findUnique({ where: { id } });
+
+        if (!todoExists) {
+            throw new Error(`Tâche avec l'ID ${id} introuvable dans ${table}.`);
+        }
+
+        // Mise à jour uniquement du champ auteur
+        const updatedTodo = await prisma[table].update({
+            where: { id },
+            data: {
+                status: newStatus, // Mettre à jour uniquement le champ auteur
+            }
+        });
+
+        return updatedTodo; // Retourne la tâche mise à jour
+    } catch (error) {
+        console.error(`Erreur lors de la mise à jour de l'auteur : ${error.message}`);
+        return null;
+    }
 };
 
