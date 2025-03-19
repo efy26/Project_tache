@@ -39,6 +39,7 @@ router.get("/api/todos/sorted", async (req, res) => {
 //**Test:OK */
 
 
+
                                         //**2 Route des fonctions de bases*/
 //Créer une tâche
 router.post("/api/todo", async (req, res) => {
@@ -48,7 +49,7 @@ router.post("/api/todo", async (req, res) => {
         const newTodo = await addTodo(data);
         
         // Ajout dans l'historique
-     
+        await addHistoryEntry(newTodo.id, newTodo.status, "AJOUTER");
 
         res.status(201).json({ todo: newTodo, message: "Tâche créée avec succès" });
     } catch (error) {
@@ -98,6 +99,7 @@ router.post("/api/todos/transfer", async (req, res) => {
     try {
         // Appeler la fonction transferTodo
         const transferredTodo = await transferTodo(fromTable, toTable, id);
+        await addHistoryEntry(transferredTodo.id, transferredTodo.status, "TRANSFERER");
 
         // Réponse en cas de succès
         res.status(200).json({
@@ -138,6 +140,7 @@ router.put("/api/todo/updateTodo", async (req, res) => {
 
     try {
         const result = await updateTodo(table, id, data);
+        await addHistoryEntry(result.id, result.status, "MODIFIER");
         if (!result) {
             return res.status(400).json({ error: "Erreur lors de la mise à jour de la tâche." });
         }
@@ -154,6 +157,7 @@ router.delete("/api/todo/deleteTodo", async (req, res) => {
     const { table, id } = req.body;
 
     try {
+        await addHistoryEntry(id, table, "SUPPRIMER");
         const result = await deleteTodo(table, id);
         if (!result) {
             return res.status(400).json({ error: "Erreur lors de la suppression de la tâche." });
@@ -196,6 +200,33 @@ router.get("/api/todos/historique", async (req, res) => {
     }
 });
 //**Test:OK*/
+
+
+//Mettre a jour just un champ de la tache
+// Route pour mettre à jour uniquement le champ auteur d'une tâche
+// Route PUT pour mettre à jour l'auteur d'une tâche
+router.put("/api/todo/updateAuthor", async (req, res) => {
+    const { table, id, newStatus } = req.body;
+
+    if (!table || !id || !newStatus) {
+        return res.status(400).json({ error: "Tous les champs (table, id, newAuthor) sont requis." });
+    }
+
+    try {
+        const updatedTodo = await updateAuthor(table, id, newStatus);
+
+        if (!updatedTodo) {
+            return res.status(404).json({ error: `Tâche avec l'ID ${id} introuvable dans ${table}.` });
+        }
+
+        return res.status(200).json(updatedTodo);
+    } catch (error) {
+        console.error(`Erreur serveur : ${error.message}`);
+        return res.status(500).json({ error: "Erreur interne du serveur." });
+    }
+});
+
+                                      
 
 
 
