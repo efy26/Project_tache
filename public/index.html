@@ -1,1 +1,104 @@
-
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Tâches</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script defer src="js/main.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+<body>
+    <!--Section1-->
+    <div class="section-header">
+        <h1>Gestion des Tâches</h1>
+        <button id="openHistory">
+            <i class="fas fa-history"></i> Historique
+        </button>
+    </div>
+ 
+    <!-- Fenêtre Popup pour l'Historique -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-content">
+            <span class="close-btn" id="closePopup">&times;</span>
+            <h2>Historique des Tâches</h2>
+            <p>Aucun historique disponible pour le moment...</p>
+        </div>
+    </div>
+ 
+ 
+    <!--Section2-->
+ 
+    <div class="section-add-task">
+        <button id="toggleForm">
+            <i class="fa-solid fa-plus"></i> AJOUTER UNE TÂCHE
+        </button>
+ 
+        <form id="taskForm" class="hidden">
+            <label for="taskTitle">Titre :</label>
+            <input type="text" id="taskTitle" required>
+ 
+            <label for="taskDescription">Description :</label>
+            <textarea id="taskDescription" required></textarea>
+ 
+            <label for="taskPriority">Priorité :</label>
+            <select id="taskPriority">
+                <option value="INFERIOR">Basse</option>
+                <option value="MOYEN">Moyenne</option>
+                <option value="HAUT">Haute</option>
+            </select>
+ 
+            <label for="taskAssigned">Assigné à :</label>
+            <input type="text" id="taskAssigned" required>
+ 
+            <label for="taskDeadline">Date limite :</label>
+            <input type="date" id="taskDeadline" required>
+            <input type="hidden" id="taskStatus" name="status" value="AFaire">
+ 
+            <button type="submit">
+                <i class="fa-solid fa-check"></i> Enregistrer
+            </button>
+        </form>
+    </div>
+ 
+    <!--Section3-->
+ 
+    <div class="section-task-board">
+        <div class="task-column" id="todo">
+            <h3><i class="fa-solid fa-list"></i> À faire</h3>
+            <div class="task-list" id="AFaire"></div>
+        </div>
+ 
+        <div class="task-column" id="in-progress">
+            <h3><i class="fa-solid fa-spinner"></i> En cours</h3>
+            <div class="task-list" id="Encours"></div>
+        </div>
+ 
+        <div class="task-column" id="review">
+            <h3><i class="fa-solid fa-search"></i> En révision</h3>
+            <div class="task-list" id="Enrevision"></div>
+        </div>
+ 
+        <div class="task-column" id="done">
+            <h3><i class="fa-solid fa-check-circle"></i> Terminé</h3>
+            <div class="task-list" id="Termine"></div>
+        </div>
+    </div>
+ 
+    <div class="sorting-buttons">
+        <button id="sortPriority">Trier par Priorité</button>
+        <form action="" id="sortPriority">
+            <select name="" id="sortPrioritySelect">
+                <option value="INFERIOR">Basse</option>
+                <option value="MOYEN">Moyenne</option>
+                <option value="HAUT">Haute</option>
+            </select>
+        </form>
+        <button id="sortDateLimite">Trier par Date Limite</button>
+        <button id="sortDateCreate">Trier par Date de Création</button>
+    </div>
+ 
+ 
+ 
+</body>
+</html>
