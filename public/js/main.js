@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", function () {
     const openHistoryBtn = document.getElementById("openHistory");
     const popupOverlay = document.getElementById("popupOverlay");
@@ -11,6 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const sortPrioritySelect = document.getElementById("sortPrioritySelect");
     const sortDateL = document.getElementById("sortDateLimite");
     const sortDateC = document.getElementById("sortDateCreate");
+    // updateSatut.addEventListener("click", statutUpdate)
 
     //Triage
     sortPrio.addEventListener("click", () => displayAllTasks2("priorite"));
@@ -66,10 +66,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-    function statutUpdate() {
-        console.log("OK");
-        
-    }
 
     // Fonction pour créer une tâche
     async function createTask(taskData) {
@@ -140,7 +136,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             selectValues.forEach(task => {
                 addTaskToDOM(task, taskList);
-                console.log(task.priorite == sortBy ? "OK" : "ECHEC");
             });
         } catch (error) {
             console.error(error);

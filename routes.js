@@ -38,7 +38,28 @@ router.get("/api/todos/sorted", async (req, res) => {
 });
 //**Test:OK */
 
+//Trier par priorite
+router.get("/api/todos/sorted-by-priority", async (req, res) => {
+    const { table } = req.query; // Récupère le nom de la table depuis les paramètres de requête
 
+    try {
+        // Appeler la fonction pour récupérer les tâches triées par priorité
+        const sortedTodos = await getTodosSortedByPriority(table);
+
+        // Réponse en cas de succès
+        res.status(200).json({
+            success: true,
+            message: `Tâches de la table ${table} triées par priorité récupérées avec succès !`,
+            data: sortedTodos,
+        });
+    } catch (error) {
+        // Réponse en cas d'erreur
+        res.status(500).json({
+            success: false,
+            message: `Erreur lors de la récupération des tâches triées par priorité : ${error.message}`,
+        });
+    }
+});
 
                                         //**2 Route des fonctions de bases*/
 //Créer une tâche
@@ -224,10 +245,7 @@ router.put("/api/todo/updateAuthor", async (req, res) => {
         console.error(`Erreur serveur : ${error.message}`);
         return res.status(500).json({ error: "Erreur interne du serveur." });
     }
-});
-
-                                      
-
+});         
 
 
 export default router;
