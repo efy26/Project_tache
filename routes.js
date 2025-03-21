@@ -14,7 +14,8 @@ import {
     transferTodo,
     addHistoryEntry,
     getTodosHistorique,
-    getTodosSortedByPriority
+    getTodosSortedByPriority,
+    updateAuthor
 } from "./model/todo.js";
 
 const router = Router();
