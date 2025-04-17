@@ -52,9 +52,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const assignedTo = document.getElementById("taskAssigned").value.trim();
         const deadline = document.getElementById("taskDeadline").value;
         const status = document.getElementById("taskStatus").value.trim();
-
-        if (title && description && assignedTo && deadline) {
-            const taskData = { titre: title, description, priorite: priority, assigne: assignedTo, dateLimite: deadline, status: status };
+        const defautUser = "user001"
+        if (title && description && assignedTo && deadline && defautUser) {
+            const taskData = { titre: title, description, priorite: priority, assigne: assignedTo, dateLimite: deadline, status: status, user:defautUser };
             await createTask(taskData); // Créer la tâche dans le backend
             await displayAllTasks()// Rafraîchir les tâches affichées
             alert("Tâche ajoutée avec succès !");
@@ -68,19 +68,58 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 // Fonction pour créer une tâche
+// async function createTask(taskData) {
+//     try {
+//         const response = await fetch(`http://localhost:5005/api/todo`, {
+//             method: "POST",
+//             headers: { "Content-Type": "application/json" },
+//             body: JSON.stringify(taskData),
+//         });
+//         if (!response.ok) throw new Error("Erreur lors de la création de la tâche");
+//         return await response.json();
+//     } catch (error) {
+//         console.error(error);
+//     }
+// }
+
+// Fonction pour ajouter une tâche
 async function createTask(taskData) {
+
     try {
-        const response = await fetch(`http://localhost:5005/api/todo`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+        const response = await fetch('http://localhost:5005/api/todo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
             body: JSON.stringify(taskData),
         });
-        if (!response.ok) throw new Error("Erreur lors de la création de la tâche");
-        return await response.json();
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            console.log('Tâche ajoutée:', data.todo);
+            // Optionnel : Ajouter la tâche dans l'interface utilisateur sans recharger la page
+            afficherTache(data.todo);
+        } else {
+            console.error('Erreur lors de l\'ajout de la tâche:', data.error);
+        }
     } catch (error) {
-        console.error(error);
+        console.error('Erreur lors de la requête fetch:', error);
     }
 }
+
+// Fonction pour afficher la tâche ajoutée dans l'interface (par exemple, une liste de tâches)
+function afficherTache(tache) {
+    const tacheElement = document.createElement('div');
+    tacheElement.classList.add('tache');
+    tacheElement.innerHTML = `
+        <h3>${tache.titre}</h3>
+        <p>${tache.description}</p>
+        <p>Priorité: ${tache.priorite}</p>
+    `;
+    document.getElementById('taches').appendChild(tacheElement);
+}
+
 
 
 

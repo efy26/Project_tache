@@ -59,28 +59,39 @@ export const getTodosSortedByPriority = async (table) => {
                                     //**2 Fonction de bases pour gerer les 4 principales tables*/
 
 
-
+const defautUser = 1
 //Creation d une tache. TOute taches créer est par defaut dans la table AFaire(seulement)
 export const addTodo = async (data) => {
-    const { titre, description, status, assigne, dateLimite, priorite } = data; // Déstructuration
+    const {
+        titre,
+        description,
+        status,
+        assigne,
+        dateLimite,
+        priorite,
+        userId // 🔑 Important : on récupère l'id de l'utilisateur
+    } = data;
 
     try {
         const todo = await prisma.AFaire.create({
             data: {
-                titre,         
-                description,       
-                status: "AFaire",        
-                assigne,       
+                titre,
+                description,
+                status: "AFaire",
                 dateLimite: new Date(dateLimite),
-                priorite,      // Priorité (Faible, Moyenne, Elevee)
+                priorite,
+                user: {
+                    connect: { id: defautUser } // 🔗 On connecte l'utilisateur existant
+                }
             },
         });
 
-        return todo; // Retourne la tâche nouvellement créée
+        return todo;
     } catch (error) {
         throw new Error(`Erreur lors de l'ajout de la tâche : ${error.message}`);
     }
 };
+
 
 //Suppresion des taches
 /**
