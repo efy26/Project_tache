@@ -67,20 +67,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-    // Fonction pour créer une tâche
-    async function createTask(taskData) {
-        try {
-            const response = await fetch(`http://localhost:5005/api/todo`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(taskData),
-            });
-            if (!response.ok) throw new Error("Erreur lors de la création de la tâche");
-            return await response.json();
-        } catch (error) {
-            console.error(error);
-        }
+// Fonction pour créer une tâche
+async function createTask(taskData) {
+    try {
+        const response = await fetch(`http://localhost:5005/api/todo`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(taskData),
+        });
+        if (!response.ok) throw new Error("Erreur lors de la création de la tâche");
+        return await response.json();
+    } catch (error) {
+        console.error(error);
     }
+}
+
+
 
     // Fonction pour afficher les tâches
 

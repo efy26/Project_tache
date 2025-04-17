@@ -346,3 +346,26 @@ export const updateAuthor = async (table, id, newStatus) => {
     }
 };
 
+
+// Création d’un utilisateur
+export const createUtilisateur = async ({ nom, email, motDePasse }) => {
+    return prisma.Utilisateur.create({
+        data: { nom, email, motDePasse },
+    });
+};
+
+// Vérifier l’existence (par id OU par email)
+export const utilisateurExiste = async ({ id, email }) => {
+    if (!id && !email) throw new Error("id ou email requis");
+    const user = await prisma.Utilisateur.findUnique({
+        where: id ? { id } : { email },
+        select: { id: true },
+    });
+    return !!user;
+};
+
+export const motDePasseOK = async (email, plainPassword) => {
+    const user = await prisma.Utilisateur.findUnique({ where: { email } });
+    if (!user) return false;
+    return user.motDePasse === plainPassword;
+};

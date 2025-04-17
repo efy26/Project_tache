@@ -1,5 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// prisma/schema.prisma
 
 generator client {
   provider = "prisma-client-js"
@@ -9,6 +8,7 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
 
 
 
@@ -32,59 +32,97 @@ enum Action {
 	TRANSFERER
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLE UTILISATEUR
+// ─────────────────────────────────────────────────────────────────────────────
+model Utilisateur {
+  id            Int           @id @default(autoincrement())
+  email         String        @unique
+  motDePasse    String
+
+  // Relations vers les tâches
+  aFaire        AFaire[]      // Un utilisateur peut avoir plusieurs "à faire"
+  encours       Encours[]     // Un utilisateur peut avoir plusieurs "en cours"
+  enrevision    Enrevision[]  // Un utilisateur peut avoir plusieurs "en révision"
+  termine       Termine[]     // Un utilisateur peut avoir plusieurs "terminées"
+  todoHistory   TodoHistory[] // Un utilisateur peut avoir plusieurs historiques
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLES DES TÂCHES
+// ─────────────────────────────────────────────────────────────────────────────
 
 model AFaire {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   titre       String
   description String
   status      String?
-  assigne     String?
-  datecreate  DateTime @default(now())
+  datecreate  DateTime   @default(now())
   dateLimite  DateTime?
   priorite    Priorite?
+
+  // Clé étrangère vers l'utilisateur
+  userId      Int
+  user        Utilisateur @relation(fields: [userId], references: [id])
 }
 
 model Encours {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   titre       String
   description String
   status      String?
-  assigne     String?
-  datecreate  DateTime?
+  datecreate  DateTime?  @default(now())
   dateLimite  DateTime?
   priorite    Priorite?
+
+  // Clé étrangère vers l'utilisateur
+  userId      Int
+  user        Utilisateur @relation(fields: [userId], references: [id])
 }
 
 model Enrevision {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   titre       String
   description String
   status      String?
-  assigne     String?
-  datecreate  DateTime?
+  datecreate  DateTime?  @default(now())
   dateLimite  DateTime?
   priorite    Priorite?
+
+  // Clé étrangère vers l'utilisateur
+  userId      Int
+  user        Utilisateur @relation(fields: [userId], references: [id])
 }
 
 model Termine {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   titre       String
   description String
   status      String?
-  assigne     String?
-  datecreate  DateTime?
+  datecreate  DateTime?  @default(now())
   dateLimite  DateTime?
   priorite    Priorite?
+
+  // Clé étrangère vers l'utilisateur
+  userId      Int
+  user        Utilisateur @relation(fields: [userId], references: [id])
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// TABLE HISTORIQUE
+// ─────────────────────────────────────────────────────────────────────────────
 
 model TodoHistory {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   titre       String
   description String
-  auteur      String?   
+  auteur      String?
   dateLimite  DateTime?
   priorite    Priorite?
-  datecreate  DateTime?
-  action	  Action?
+  datecreate  DateTime? @default(now())
+  action      Action?
+
+  // Clé étrangère vers l'utilisateur
+  userId      Int
+  user        Utilisateur @relation(fields: [userId], references: [id])
 }

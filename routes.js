@@ -17,11 +17,173 @@ import {
     getTodosSortedByPriority,
     updateAuthor
 } from "./model/todo.js";
+import passport from "passport";
+
+import { addUser } from "./model/user.js";
+import {
+    isDescriptionValid,
+    isEmailValid,
+    isPasswordValid,
+} from "./validation.js";
 
 const router = Router();
 
+// Importer Passport et la stratégie locale
+import { Strategy as LocalStrategy } from "passport-local";
+import { getUserByEmail, validatePassword } from "./model/user.js"; // Exemple de fonction pour vérifier l'email et le mot de passe
 
-                                        //**1 Route des triages*/
+// Configurer la stratégie locale
+passport.use(new LocalStrategy(
+    {
+        usernameField: 'email', // ou 'username' si vous utilisez un nom d'utilisateur
+        passwordField: 'motDePasse', // 'motDePasse' selon votre modèle
+    },
+    async (email, motDePasse, done) => {
+        try {
+            // Vérifiez l'utilisateur dans la base de données (fonction à adapter)
+            const utilisateur = await getUserByEmail(email);
+            if (!utilisateur) {
+                return done(null, false, { message: 'Email non trouvé' });
+            }
+
+            // Vérifiez si le mot de passe est correct (fonction à adapter)
+            const isPasswordValid = await validatePassword(motDePasse, utilisateur.motDePasse);
+            if (!isPasswordValid) {
+                return done(null, false, { message: 'Mot de passe incorrect' });
+            }
+
+            // Si tout est OK, l'utilisateur est authentifié
+            return done(null, utilisateur);
+        } catch (error) {
+            return done(error);
+        }
+    }
+));
+
+// Sérialiser l'utilisateur dans la session
+passport.serializeUser((utilisateur, done) => {
+    done(null, utilisateur.id); // Par exemple, on stocke l'ID dans la session
+});
+
+// Désérialiser l'utilisateur depuis la session
+passport.deserializeUser(async (id, done) => {
+    try {
+        const utilisateur = await getUserById(id); // Fonction pour retrouver l'utilisateur par son ID
+        done(null, utilisateur);
+    } catch (error) {
+        done(error);
+    }
+});
+
+router.post("/connexion", (request, response, next) => {
+    // On vérifie si le courriel et le mot de passe sont valides
+    if (
+        isEmailValid(request.body.email) &&
+        isPasswordValid(request.body.motDePasse)
+    ) {
+        // On lance l'authentification avec passport.js
+        passport.authenticate("local", (erreur, Utilisateur, info) => {
+            if (erreur) {
+                // S'il y a une erreur lors de l'authentification, on la passe au serveur
+                console.error("Erreur d'authentification:", erreur);
+                return next(erreur);
+            } 
+            
+            if (!Utilisateur) {
+                // Si l'utilisateur n'est pas trouvé (mauvais identifiants), on renvoie une erreur 401
+                return response.status(401).json({
+                    error: info ? info.message : "Identifiants incorrects"
+                });
+            }
+
+            // Si tout fonctionne, on ajoute l'utilisateur dans la session et on renvoie une réponse 200
+            request.logIn(Utilisateur, (erreur) => {
+                if (erreur) {
+                    // En cas d'erreur lors de la connexion dans la session
+                    console.error("Erreur lors de l'ajout de l'utilisateur dans la session :", erreur);
+                    return next(erreur);
+                }
+
+                // On stocke l'utilisateur dans la session si ce n'est pas déjà fait
+                if (!request.session.Utilisateur) {
+                    request.session.Utilisateur = Utilisateur;
+                }
+
+                // Réponse de succès avec l'utilisateur
+                response.status(200).json({
+                    message: "Connexion réussie",
+                    Utilisateur,
+                });
+            });
+        })(request, response, next);
+    } else {
+        // Si l'email ou le mot de passe est invalide, on renvoie une erreur 400
+        response.status(400).json({
+            error: "Email ou mot de passe invalide"
+        });
+    }
+});
+
+
+//Route pour ajouter un utilisateur
+router.post("/inscription", async (request, response) => {
+    const { email, motDePasse } = request.body;
+
+    // Validation des champs
+    if (!isEmailValid(email)) {
+        return response.status(400).json({ error: "Email invalide" });
+    }
+
+    if (!isPasswordValid(motDePasse)) {
+        return response.status(400).json({ error: "Mot de passe invalide (min 6 caractères par exemple)" });
+    }
+
+    try {
+        const Utilisateur = await addUser(email, motDePasse);
+        response
+            .status(200)
+            .json({ Utilisateur, message: "Utilisateur ajouté avec succès" });
+    } catch (error) {
+        console.log("error", error.code);
+        if (error.code === "P2002") {
+            response.status(409).json({ error: "Email déjà utilisé" });
+        } else {
+            response.status(400).json({ error: error.message });
+        }
+    }
+});
+
+
+router.get("/connexions", (request, response) => {
+    response.render("connexions", {
+        titre: "Connexions",
+        styles: ["css/style.css"],
+        scripts: ["./js/main.js"],
+    });
+});
+router.get("/inscription", (request, response) => {
+    response.render("inscription", {
+        titre: "Inscription",
+        styles: ["css/style.css"],
+        scripts: ["./js/main.js"],
+    });
+});
+
+
+router.post("/login", async (req, res) => {
+    const { email, motDePasse } = req.body;
+    if (!email || !motDePasse) {
+        return res.status(400).json({ error: "Email et mot de passe requis" });
+    }
+
+    const ok = await motDePasseOK(email, motDePasse);
+    if (!ok) return res.status(401).json({ error: "Identifiants invalides" });
+
+    
+    res.json({ message: "Connexion réussie" });
+});
+
+                                       //**1 Route des triages*/
 //Trier par date
 router.get("/api/todos/sorted", async (req, res) => {
     const { table, sortBy = "datecreate", order = "asc" } = req.query;

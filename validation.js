@@ -13,3 +13,19 @@ export const isDescriptionValid = (description) => {
   return trimmedDescription.length >= 5 && trimmedDescription.length <= 50;
 };
  
+
+
+// verifier si l'email est valide
+export const isEmailValid = (email) =>
+  email &&
+  typeof email === "string" &&
+  email.length >= 5 &&
+  email.length <= 50 &&
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+// verifier si le password est valide
+export const isPasswordValid = (password) =>
+  password &&
+  typeof password === "string" &&
+  password.length >= 8 &&
+  password.length <= 16;
