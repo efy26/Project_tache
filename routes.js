@@ -18,7 +18,6 @@ import {
     updateAuthor
 } from "./model/todo.js";
 import passport from "passport";
-
 import { addUser } from "./model/user.js";
 import {
     isDescriptionValid,
@@ -28,31 +27,26 @@ import {
 
 const router = Router();
 
-// Importer Passport et la stratégie locale
 import { Strategy as LocalStrategy } from "passport-local";
-import { getUserByEmail, validatePassword } from "./model/user.js"; // Exemple de fonction pour vérifier l'email et le mot de passe
+import { getUserByEmail, validatePassword } from "./model/user.js";
 
-// Configurer la stratégie locale
 passport.use(new LocalStrategy(
     {
-        usernameField: 'email', // ou 'username' si vous utilisez un nom d'utilisateur
-        passwordField: 'motDePasse', // 'motDePasse' selon votre modèle
+        usernameField: 'email',
+        passwordField: 'motDePasse',
     },
     async (email, motDePasse, done) => {
         try {
-            // Vérifiez l'utilisateur dans la base de données (fonction à adapter)
             const utilisateur = await getUserByEmail(email);
             if (!utilisateur) {
                 return done(null, false, { message: 'Email non trouvé' });
             }
 
-            // Vérifiez si le mot de passe est correct (fonction à adapter)
             const isPasswordValid = await validatePassword(motDePasse, utilisateur.motDePasse);
             if (!isPasswordValid) {
                 return done(null, false, { message: 'Mot de passe incorrect' });
             }
 
-            // Si tout est OK, l'utilisateur est authentifié
             return done(null, utilisateur);
         } catch (error) {
             return done(error);
@@ -60,15 +54,13 @@ passport.use(new LocalStrategy(
     }
 ));
 
-// Sérialiser l'utilisateur dans la session
 passport.serializeUser((utilisateur, done) => {
-    done(null, utilisateur.id); // Par exemple, on stocke l'ID dans la session
+    done(null, utilisateur.id);
 });
 
-// Désérialiser l'utilisateur depuis la session
 passport.deserializeUser(async (id, done) => {
     try {
-        const utilisateur = await getUserById(id); // Fonction pour retrouver l'utilisateur par son ID
+        const utilisateur = await getUserById(id);
         done(null, utilisateur);
     } catch (error) {
         done(error);
@@ -76,40 +68,32 @@ passport.deserializeUser(async (id, done) => {
 });
 
 router.post("/connexion", (request, response, next) => {
-    // On vérifie si le courriel et le mot de passe sont valides
     if (
         isEmailValid(request.body.email) &&
         isPasswordValid(request.body.motDePasse)
     ) {
-        // On lance l'authentification avec passport.js
         passport.authenticate("local", (erreur, Utilisateur, info) => {
             if (erreur) {
-                // S'il y a une erreur lors de l'authentification, on la passe au serveur
                 console.error("Erreur d'authentification:", erreur);
                 return next(erreur);
             } 
             
             if (!Utilisateur) {
-                // Si l'utilisateur n'est pas trouvé (mauvais identifiants), on renvoie une erreur 401
                 return response.status(401).json({
                     error: info ? info.message : "Identifiants incorrects"
                 });
             }
 
-            // Si tout fonctionne, on ajoute l'utilisateur dans la session et on renvoie une réponse 200
             request.logIn(Utilisateur, (erreur) => {
                 if (erreur) {
-                    // En cas d'erreur lors de la connexion dans la session
                     console.error("Erreur lors de l'ajout de l'utilisateur dans la session :", erreur);
                     return next(erreur);
                 }
 
-                // On stocke l'utilisateur dans la session si ce n'est pas déjà fait
                 if (!request.session.Utilisateur) {
                     request.session.Utilisateur = Utilisateur;
                 }
 
-                // Réponse de succès avec l'utilisateur
                 response.status(200).json({
                     message: "Connexion réussie",
                     Utilisateur,
@@ -117,19 +101,28 @@ router.post("/connexion", (request, response, next) => {
             });
         })(request, response, next);
     } else {
-        // Si l'email ou le mot de passe est invalide, on renvoie une erreur 400
         response.status(400).json({
             error: "Email ou mot de passe invalide"
         });
     }
 });
 
+router.get("/profil", (request, response) => {
+    if (request.isAuthenticated()) {
+        response.status(200).json({
+            message: "Utilisateur connecté",
+            utilisateur: request.user,
+        });
+    } else {
+        response.status(401).json({
+            message: "Utilisateur non connecté",
+        });
+    }
+});
 
-//Route pour ajouter un utilisateur
 router.post("/inscription", async (request, response) => {
     const { email, motDePasse } = request.body;
 
-    // Validation des champs
     if (!isEmailValid(email)) {
         return response.status(400).json({ error: "Email invalide" });
     }
@@ -140,11 +133,8 @@ router.post("/inscription", async (request, response) => {
 
     try {
         const Utilisateur = await addUser(email, motDePasse);
-        response
-            .status(200)
-            .json({ Utilisateur, message: "Utilisateur ajouté avec succès" });
+        response.status(200).json({ Utilisateur, message: "Utilisateur ajouté avec succès" });
     } catch (error) {
-        console.log("error", error.code);
         if (error.code === "P2002") {
             response.status(409).json({ error: "Email déjà utilisé" });
         } else {
@@ -153,7 +143,6 @@ router.post("/inscription", async (request, response) => {
     }
 });
 
-
 router.get("/connexions", (request, response) => {
     response.render("connexions", {
         titre: "Connexions",
@@ -161,6 +150,7 @@ router.get("/connexions", (request, response) => {
         scripts: ["./js/main.js"],
     });
 });
+
 router.get("/inscription", (request, response) => {
     response.render("inscription", {
         titre: "Inscription",
@@ -168,7 +158,6 @@ router.get("/inscription", (request, response) => {
         scripts: ["./js/main.js"],
     });
 });
-
 
 router.post("/login", async (req, res) => {
     const { email, motDePasse } = req.body;
@@ -179,12 +168,9 @@ router.post("/login", async (req, res) => {
     const ok = await motDePasseOK(email, motDePasse);
     if (!ok) return res.status(401).json({ error: "Identifiants invalides" });
 
-    
     res.json({ message: "Connexion réussie" });
 });
 
-                                       //**1 Route des triages*/
-//Trier par date
 router.get("/api/todos/sorted", async (req, res) => {
     const { table, sortBy = "datecreate", order = "asc" } = req.query;
  
@@ -192,31 +178,25 @@ router.get("/api/todos/sorted", async (req, res) => {
         if (!table) {
             return res.status(400).json({ error: "Le paramètre 'table' est requis." });
         }
- 
+
         const sortedTodos = await trierTaches(table, sortBy, order);
         res.status(200).json(sortedTodos);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
-//**Test:OK */
 
-//Trier par priorite
 router.get("/api/todos/sorted-by-priority", async (req, res) => {
-    const { table } = req.query; // Récupère le nom de la table depuis les paramètres de requête
+    const { table } = req.query;
 
     try {
-        // Appeler la fonction pour récupérer les tâches triées par priorité
         const sortedTodos = await getTodosSortedByPriority(table);
-
-        // Réponse en cas de succès
         res.status(200).json({
             success: true,
             message: `Tâches de la table ${table} triées par priorité récupérées avec succès !`,
             data: sortedTodos,
         });
     } catch (error) {
-        // Réponse en cas d'erreur
         res.status(500).json({
             success: false,
             message: `Erreur lors de la récupération des tâches triées par priorité : ${error.message}`,
@@ -224,15 +204,11 @@ router.get("/api/todos/sorted-by-priority", async (req, res) => {
     }
 });
 
-                                        //**2 Route des fonctions de bases*/
-//Créer une tâche
 router.post("/api/todo", async (req, res) => {
     const data = req.body;
     
     try {
         const newTodo = await addTodo(data);
-        
-        // Ajout dans l'historique
         await addHistoryEntry(newTodo.id, newTodo.status, "AJOUTER");
 
         res.status(201).json({ todo: newTodo, message: "Tâche créée avec succès" });
@@ -240,10 +216,7 @@ router.post("/api/todo", async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-//**Test:OK */
 
-
-//Obtenir toutes les tâches de toutes les 4 tables
 router.get("/api/todos0", async (req, res) => {
     try {
         const todos1 = await getTodos1();
@@ -255,10 +228,7 @@ router.get("/api/todos0", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-//**Test:OK*/
 
-
-//Obtenir toutes les tâches d une table
 router.get("/api/todos", async (req, res) => {
     const { table } = req.query;
 
@@ -273,36 +243,27 @@ router.get("/api/todos", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-//**Test:OK*/
 
-
-//Transfert d une tache
 router.post("/api/todos/transfer", async (req, res) => {
     const { fromTable, toTable, id } = req.body;
 
     try {
-        // Appeler la fonction transferTodo
         const transferredTodo = await transferTodo(fromTable, toTable, id);
         await addHistoryEntry(transferredTodo.id, transferredTodo.status, "TRANSFERER");
 
-        // Réponse en cas de succès
         res.status(200).json({
             success: true,
             message: `Tâche ID ${id} transférée de ${fromTable} vers ${toTable} avec succès !`,
             data: transferredTodo,
         });
     } catch (error) {
-        // Réponse en cas d'erreur
         res.status(500).json({
             success: false,
             message: `Erreur lors du transfert : ${error.message}`,
         });
     }
 });
-//**Test:OK*/
 
-
-//Sélectionner une tâche par son ID (A ignorer)
 router.get("/api/todo/:id", async (req, res) => {
     const { id } = req.params;
     try {
@@ -315,10 +276,7 @@ router.get("/api/todo/:id", async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-//**Test: */
 
-
-//Modifier une tâche
 router.put("/api/todo/updateTodo", async (req, res) => {
     const { table, id, data } = req.body;
 
@@ -333,10 +291,7 @@ router.put("/api/todo/updateTodo", async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-//**Test:OK*/
 
-
-//Supprimer une tâche
 router.delete("/api/todo/deleteTodo", async (req, res) => {
     const { table, id } = req.body;
 
@@ -351,12 +306,7 @@ router.delete("/api/todo/deleteTodo", async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-//**Test:OK* /
 
-
-                                        //**3 Route des l'historique des tâches*/
-
-//Ajout dans l historique
 router.post('/api/historique', async (req, res) => {
     const { id, table, action } = req.body;
 
@@ -371,10 +321,7 @@ router.post('/api/historique', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-//**Test:OK* /
 
-
-//Recuperer la liste des taches
 router.get("/api/todos/historique", async (req, res) => {
     try {
         const todos = await getTodosHistorique();
@@ -383,12 +330,7 @@ router.get("/api/todos/historique", async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-//**Test:OK*/
 
-
-//Mettre a jour just un champ de la tache
-// Route pour mettre à jour uniquement le champ auteur d'une tâche
-// Route PUT pour mettre à jour l'auteur d'une tâche
 router.put("/api/todo/updateAuthor", async (req, res) => {
     const { table, id, newStatus } = req.body;
 
@@ -405,10 +347,8 @@ router.put("/api/todo/updateAuthor", async (req, res) => {
 
         return res.status(200).json(updatedTodo);
     } catch (error) {
-        console.error(`Erreur serveur : ${error.message}`);
         return res.status(500).json({ error: "Erreur interne du serveur." });
     }
-});         
-
+});
 
 export default router;

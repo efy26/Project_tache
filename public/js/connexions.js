@@ -19,6 +19,7 @@ formConnexion.addEventListener("submit", async (event) => {
 
     if (response.ok) {
         window.location.replace("/");
+        
     } else {
         const contentType = response.headers.get("content-type");
     
